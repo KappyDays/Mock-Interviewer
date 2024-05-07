@@ -20,9 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# 웹사이트 보안에 사용되는 키
 SECRET_KEY = 'django-insecure-4bfsfd@0c08d4lean*(!d@-%4navy99n1sson$h27)rax27$&_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# 제품화된 환경에서는 False로 변경
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -37,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'catalog.apps.CatalogConfig', # App 구성 객체 지정
 ]
 
 MIDDLEWARE = [
@@ -72,7 +75,7 @@ WSGI_APPLICATION = 'mockinterviewer.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
+# DB는 기본 sqlite3
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -105,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
