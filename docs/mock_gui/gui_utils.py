@@ -1,0 +1,178 @@
+import tkinter as tk
+from tkinter import Toplevel, Label, Entry, Button, Text, messagebox, filedialog
+from gpt_utils import *
+import pdb
+import pygame
+import time
+import soundfile as sf
+import threading
+import sounddevice as sd
+import numpy as np
+import queue
+
+class Gui_utils:
+    def __init__(self, root, text_box, chatbot:Chatbot):
+        self.root = root
+        self.question_queue = queue.Queue()
+        self.text_box = text_box
+        
+        self.record_order = 0
+        self.ai_answer_order = 0
+        
+        self.ai_answer = None
+        
+        self.cb = chatbot
+        
+    def show_temporary_alert(self, window, message, delay=2000):
+        # 메시지를 보여주는 팝업 창 생성
+        popup = tk.Toplevel(window)
+        popup.title("Alert")
+        popup.geometry("200x100")  # 창 크기 설정
+
+        # 메시지 라벨 추가
+        message_label = tk.Label(popup, text=message)
+        message_label.pack(pady=20, padx=20)
+
+        # 지정된 시간(delay) 후에 팝업 창 닫기
+        return popup
+
+    def add_hello(self, text_widget, alignment):
+        # 새로운 텍스트를 끝에 추가
+        current_end = text_widget.index("end-1c")
+        text_widget.insert(tk.END, "Hello World!\n")
+        new_end = text_widget.index("end-1c")
+        
+        # 텍스트를 지정된 정렬 방식으로 설정
+        tag_name = alignment + current_end  # 각 태그에 고유 이름을 부여
+        text_widget.tag_add(tag_name, current_end, new_end)
+        text_widget.tag_configure(tag_name, justify=alignment)
+
+    def start_interview(self):
+        if self.ai_answer == None:
+            self.text_box.insert(tk.END, "먼저 자기소개서를 입력해 주세요.\n")
+            return 
+        
+        # for first question
+        print("start_interview questions, ai_answer ->-> ", self.ai_answer)
+        ai_speech_path = self.cb.make_tts(self.ai_answer)
+        # speech_file_path = "C:/workspace/speech_0.mp3"
+        self.ask_question(self.ai_answer, ai_speech_path)
+        # self.root.after(1000, lambda: self.response_question(filename=self.record_filename))
+        return
+    
+    def ask_question(self, query, ai_speech_path):
+        self.text_box.insert(tk.END, f"Q: {query}" + "\n")
+        self.right_align()
+        
+        self.play_tts(ai_speech_path)
+
+    def open_custom_dialog(self):
+        def submit(input_box):
+            user_input = input_box.get("1.0", "end-1c")
+            if user_input:
+                popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
+                popup.after(2000, popup.destroy)
+                
+                self.ai_answer = self.cb.generate_response(user_input)
+                # q_list = questions.split('\n')
+                # q_list = ["1. 안녕하세요. 저는 광주광역시에 사는 박예진입니다아아다아다닷.", "2. 저는 똥멍청이에 부바킹입니다 크킄", "3. 하지만 강렬이를 사랑하죠 스슥"]
+                dialog.destroy()
+            else:
+                messagebox.showinfo("Alert", "자기소개서를 입력해 주세요.")
+
+        # 새 대화창 생성
+        dialog = Toplevel(self.root)
+        dialog.title("Input")
+        dialog.geometry("400x400")  # 대화창 크기 설정
+
+        # 라벨 생성
+        label = Label(dialog, text="자기소개서를 입력해 주세요.")
+        label.pack(pady=10)
+
+        # 텍스트 입력 필드 생성
+        input_box = Text(dialog, height=10, width=40)
+        # entry = Entry(dialog, width=25)
+        # entry.pack(pady=5)
+        input_box.pack(pady=5)
+
+        # 제출 버튼 생성
+        submit_button = Button(dialog, text="Submit", command=lambda: submit(input_box))
+        submit_button.pack(pady=10)
+
+    def play_tts(self, filename):
+        if filename:
+            print(f"Loaded {filename}..")
+            pygame.mixer.music.load(filename)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                continue  # MP3 재생이 끝날 때까지 기다림
+        else:
+            print("No file loaded")
+        self.root.after(2000, self.record_question)
+
+    def record_question(self):
+        UserSpeech_filename = "UserSpeech_" + str(self.record_order) + ".wav"
+        pygame.mixer.music.load('ale.wav')
+        pygame.mixer.music.play()     
+        while pygame.mixer.music.get_busy():
+            continue  # MP3 재생이 끝날 때까지 기다림              
+        silence_threshold = 1.0  # 침묵 임계값 설정
+        max_silence_blocks = 100  # 연속 침묵을 허용하는 블록 수
+        silence_counter = 0  # 침묵 블록 카운터 초기화
+        q = queue.Queue()  # 오디오 데이터를 저장할 큐
+        
+        def audio_callback(indata, frames, time, status):
+            """이 콜백은 새로운 오디오 데이터가 도착할 때마다 호출됩니다."""
+            volume_norm = np.linalg.norm(indata) * 10
+            # print(f"Volume: {volume_norm:.2f}")  # 볼륨 수준 출력 (디버깅 목적)
+            if volume_norm < silence_threshold:
+                nonlocal silence_counter
+                silence_counter += 1
+            else:
+                silence_counter = 0
+            if silence_counter >= max_silence_blocks:
+                raise sd.CallbackStop  # 침묵이 지속되면 콜백 중지
+            q.put(indata.copy())  # 큐에 오디오 데이터 추가
+        def recording_thread():
+            try:
+                with sd.InputStream(callback=audio_callback) as stream:
+                    with sf.SoundFile(UserSpeech_filename, mode='w', samplerate=44100, channels=2, subtype="PCM_16") as file:
+                        while True:
+                            try:
+                                data = q.get(timeout=1)  # 1초 타임아웃 설정
+                                file.write(data)
+                            except queue.Empty:
+                                if not stream.active:
+                                    break  # 스트림이 비활성화 상태이면 루프 종료                            
+            except sd.CallbackStop:
+                print("recording CallbackStop(except)")
+                pass  # 예상되는 종료
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+            finally:
+                print("recording finally")
+        recording_thread()
+        self.record_order += 1
+        
+        # 답변 출력 위해 stt사용
+        user_text = self.cb.make_stt(UserSpeech_filename)
+        print("유저텍스트:", user_text)
+        # user_text = "Test Textinput22"#make_stt(filename)
+        self.text_box.insert(tk.END, "A: " + user_text + "\n")
+        
+        # 답변을 통해 query, tts 생성하고 인자 넘겨주기
+        self.proceed_conversation(user_text)
+
+    def proceed_conversation(self, user_text):
+        # 답변을 통해 query, tts 생성하고 인자 넘겨주기
+        ai_text = self.cb.generate_response(user_text)
+        ai_speech_path = self.cb.make_tts(ai_text)
+        self.root.after(3000, lambda: self.ask_question(ai_text, ai_speech_path))
+        
+        return ai_speech_path
+    
+    def right_align(self):
+        new_end = self.text_box.index("end-1c")
+        tag_name = 'right' + new_end.replace('.', '_')
+        self.text_box.tag_add(tag_name, new_end + "-1l linestart", new_end)
+        self.text_box.tag_configure(tag_name, justify='right')
