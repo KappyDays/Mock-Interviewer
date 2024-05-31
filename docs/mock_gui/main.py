@@ -16,7 +16,12 @@ class Gui_app:
         
         self.gt = Chatbot(root, self.text_box)
         self.ut = Gui_utils(root, self.text_box, self.gt)
+
+        self.button_temp = tk.Button(self.root, text="Test input", 
+                                      command = lambda: print("hihi"))
+        self.button_start.pack(pady=10)  # 상하 여백 추가
         
+                
         self.button_start = tk.Button(self.root, text="Start", 
                                       command = self.ut.start_interview)
         self.button_start.pack(pady=10)  # 상하 여백 추가
@@ -36,6 +41,10 @@ class Gui_app:
         self.button_interview_summary = tk.Button(self.root, text="면접 요약 확인", 
                                         command = lambda: print("Ai_interview_summary:\n", self.gt.generate_summary()))
         self.button_interview_summary.pack(pady=10)  # 상하 여백 추가
+        
+        self.button_interview_evaluate = tk.Button(self.root, text="면접 내용 평가", 
+                                        command = self.gt.evaluate_interview)
+        self.button_interview_evaluate.pack(pady=10)  # 상하 여백 추가
                         
     def test(self):
         print("yesgogo!!!!!!!!")
