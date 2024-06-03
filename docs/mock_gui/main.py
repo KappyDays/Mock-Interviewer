@@ -17,9 +17,9 @@ class Gui_app:
         self.gt = Chatbot(root, self.text_box)
         self.ut = Gui_utils(root, self.text_box, self.gt)
 
-        self.button_temp = tk.Button(self.root, text="Test input", 
-                                      command = lambda: print("hihi"))
-        self.button_start.pack(pady=10)  # 상하 여백 추가
+        # self.button_temp = tk.Button(self.root, text="Test input", 
+        #                               command = lambda: print("hihi"))
+        # self.button_temp.pack(pady=10)  # 상하 여백 추가
         
                 
         self.button_start = tk.Button(self.root, text="Start", 
@@ -35,7 +35,7 @@ class Gui_app:
         self.button_t.pack(pady=10)  # 상하 여백 추가
 
         self.button_interview_history = tk.Button(self.root, text="면접 전체 내용 확인", 
-                                  command = lambda: print("Ai_interview_history:\n", self.gt.chat_history))
+                                  command = lambda: self.ut.show_chat_history(self.gt.chat_history))
         self.button_interview_history.pack(pady=10)  # 상하 여백 추가
 
         self.button_interview_summary = tk.Button(self.root, text="면접 요약 확인", 

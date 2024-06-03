@@ -23,6 +23,8 @@ class Chatbot:
         self.text_box = text_box
         
         self.chat_history = ""
+        self.ps = self.get_PersonalStatement("ps.txt")
+        
         self.max_length = max_length
 
         self.response = False
@@ -39,37 +41,46 @@ class Chatbot:
         self.chat_history = updated_history
 
     # 응답 생성
-    def generate_response(self, prompt):
-        print("들어온 프롬프트:", prompt)
-        if prompt == "":
-            answer = "질문에 답변을 해주세요"
-            return answer
+    def generate_response(self, user_input, question=None): #follow question
+        print("들어온 프롬프트:", user_input)
+        # 인터뷰 도중 유저의 입력이 없을 경우
+        if user_input == "":
+            ai_answer = "질문에 답변을 해주세요"
+            return ai_answer
         
-        # 첫 응답일 경우 프롬프트 제시
+        # 첫 응답일 경우 자소서에 대한 질문 생성을 위해 프롬프트 제시
         if self.response == False:
-            user_prompt = "This is My Personal Statement.\n\n" + prompt + \
-                "\n\nPlease generate one question based on the Personal Statement I wrote.\n" + \
-                    "Please don't create any words other than answers.\n"
-            prompt = user_prompt
+            user_prompt = "This is My Personal Statement.\n\n" + user_input + \
+                "\n\nPlease create 2 questions for each item in Korean based on the contents written in the Personal Statement.\n"
+            # user_input = "[자기소개]"
             self.response = True
         else:
-            user_prompt = self.chat_history + "\n\n" + prompt
-                    
-        response = self.client.chat.completions.create(
-            model = self.model,
-            messages=[
-                {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
-                    You have to say one sentence at a time and answer in Korean"},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=150,
-            n=1,
-            temperature=1
-        )
-        answer = response.choices[0].message.content
-        self.add_message("User: " + prompt + "\n")
-        self.add_message("AI: " + answer+ "\n")
-        return answer
+            user_prompt = self.chat_history + "\n\n" + user_input
+        
+        # 꼬리 질문이 아닐 경우 질문 리스트에서 가져온 질문 사용
+        if question:
+            ai_answer = question
+        # 꼬리 질문일 경우 사용자 답변을 기반으로 질문을 생성
+        else:
+            ai_answer = "꼬리질문이다이"
+            
+            # response = self.client.chat.completions.create(
+            #     model = self.model,
+            #     messages=[
+            #         {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
+            #             Please create a question in Korean related to the user's answer"},
+            #         {"role": "user", "content": user_prompt},
+            #     ],
+            #     max_tokens=150,
+            #     n=1,
+            #     temperature=1
+            # )
+            # ai_answer = response.choices[0].message.content            
+        
+        # 채팅 히스토리 기록
+        self.add_message("User: " + user_input + "\n")
+        self.add_message("AI: " + ai_answer+ "\n")
+        return ai_answer
     
     def generate_summary(self):
         if not self.is_interviewed(): return
@@ -95,7 +106,7 @@ class Chatbot:
             messages=[
                 {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
                     Look at the following whole conversation and give me an evaluation.\n\
-                    Give a maximum of 5 score according to each evaluation criteria and explain why.\n\
+                    Give a maximum of 5 score according to each evaluation criteria and explain why in korean.\n\
                     Here are five evaluation criteria.\n\n\
                     1. Is the answer based on the cover letter?\n\
                     2. Is the clarity and logic of the answers to the given questions appropriate?\n\
@@ -134,4 +145,14 @@ class Chatbot:
     def is_interviewed(self):
         if self.chat_history == "":
             self.text_box.insert(tk.END, "대화 내용이 없습니다. 먼저 Mock Interview를 진행해주세요.\n")
-            return True
+            return False
+        else:
+            True
+        
+    def get_PersonalStatement(self, txt_path):
+        personal_statement = ""
+        with open(txt_path, 'r', encoding='utf-8') as fp:
+            lines = fp.readlines()
+            for line in lines:
+                personal_statement += line
+        return personal_statement
