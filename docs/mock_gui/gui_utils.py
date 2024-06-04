@@ -190,7 +190,7 @@ class Gui_utils:
         self.proceed_conversation(user_text)
 
     def proceed_conversation(self, user_text):
-        # 자소서 기반 질문이 끝나면 면접 종료
+        # 자소서 기반 질문이 끝나고, reply까지 완료하면 면접 종료
         if self.question_list == [] and self.all_qc % 2 != 0:
             self.text_box.insert(tk.END, "\n면접이 종료되었습니다. 면접 내용을 확인해주세요.\n")
             return
@@ -200,17 +200,15 @@ class Gui_utils:
             ai_text = self.cb.generate_response(user_text)
         else: # 미리 생성된 자소서 기반 질문 사용
             ai_text = self.cb.generate_response(user_text, self.question_list.pop())
-        # self.question_count += 1
         self.all_qc += 1
         
-        # ai_speech_path = self.cb.make_tts(ai_text)
-        ai_speech_path = "C:/workspace/docs/mock_gui/AiSpeech_0.mp3"
+        ai_speech_path = self.cb.make_tts(ai_text)
+        # ai_speech_path = "C:/workspace/docs/mock_gui/AiSpeech_0.mp3"
         self.root.after(3000, lambda: self.ask_question(ai_text, ai_speech_path))
         
         return ai_speech_path
 
     def show_chat_history(self, history):
-
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Input")
@@ -222,8 +220,6 @@ class Gui_utils:
 
         # 텍스트 입력 필드 생성
         input_box = Text(dialog, height=30, width=50)
-        # entry = Entry(dialog, width=25)
-        # entry.pack(pady=5)
         input_box.pack(pady=5)
         input_box.insert(tk.END, history)
 

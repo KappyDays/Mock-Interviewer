@@ -22,7 +22,7 @@ class Chatbot:
         self.root = root
         self.text_box = text_box
         
-        self.chat_history = ""
+        self.chat_history = []
         self.ps = self.get_PersonalStatement("ps.txt")
         
         self.max_length = max_length
@@ -36,14 +36,22 @@ class Chatbot:
         self.fine_tuned_model = "ft:gpt-3.5-turbo-0125:personal:60mock:9W2XDE5J"
         
         
-    def add_message(self, message):
-        # 대화 추가 전에 최대 길이를 초과할지 확인하고 조정
-        updated_history = self.chat_history + "\n" + message
-        if len(updated_history) > self.max_length:
-            # 토큰을 줄여 최대 길이에 맞춤
-            updated_history = updated_history[-self.max_length:]
-        self.chat_history = updated_history
+    # def add_message(self, message):
+    #     # 대화 추가 전에 최대 길이를 초과할지 확인하고 조정
+    #     updated_history = self.chat_history + "\n" + message
+    #     if len(updated_history) > self.max_length:
+    #         # 토큰을 줄여 최대 길이에 맞춤
+    #         updated_history = updated_history[-self.max_length:]
+    #     self.chat_history = updated_history
 
+    def history_update(self, role, content):
+        # 대화 추가 전에 최대 길이를 초과할지 확인하고 조정
+        # updated_history = self.chat_history + "\n" + message
+        # if len(updated_history) > self.max_length:
+        #     # 토큰을 줄여 최대 길이에 맞춤
+        #     updated_history = updated_history[-self.max_length:]
+        self.chat_history.append({"role": role, "content": content})
+        
     def generate_ps_questions(self, user_input, reply=False, new_dialog=False):
         print("자소서 기반 질문 생성! 들어온 프롬프트:", user_input)
         # 자소서 입력이 안된 경우
@@ -51,80 +59,63 @@ class Chatbot:
             ai_answer = "질문에 답변을 해주세요"
             return ai_answer
         
-        # 자소서 입력이 된 경우, 질문 생성
-        # 자소서 기반 유저 프롬프트 생성
+        # GPT용 시스템 입력 생성 후 히스토리 업데이트
+        system_input = "You are a helpful Mock Interviewer.\nPlease create a question in Korean related to the user's answer"
+        self.history_update("system", system_input)
+                
+        # 자소서 입력이 된 경우, 자소서 기반 질문 생성
         user_prompt = "This is My Personal Statement.\n\n" + user_input + \
             "\n\nPlease create 2 questions for each item in Korean based on the contents written in the Personal Statement.\n\
             Please separate it by \n, and don't number it."
+        self.history_update("user", user_prompt) # 히스토리 업데이트
+        
+        # GPT 응답 생성
         response = self.client.chat.completions.create(
             model = self.model,
-            messages=[
-                {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
-                    Please create a question in Korean related to the user's answer"},
-                {"role": "user", "content": user_prompt},
-            ],
+            messages=self.chat_history,
             max_tokens=self.max_tokens,
             n=self.n,
             temperature=self.temperature
         )
-        # 질문 생성
-        question_list = response.choices[0].message.content
-        question_list = question_list.split("\n")
+        
+        # 응답 history에 추가
+        ai_answer = response.choices[0].message.content
+        self.history_update("assistant", ai_answer)
+        # 질문을 나눠서 질문 리스트 생성
+        question_list = ai_answer.split("\n")
         print("질문 개수: ", len(question_list))
         return question_list
 
     # 응답 생성
-    def generate_response(self, user_input, reply=False, new_dialog=False): #follow question
+    def generate_response(self, user_input, question=False): #follow question
         print("들어온 프롬프트:", user_input)
         # 인터뷰 도중 유저의 입력이 없을 경우
         if user_input == "":
             ai_answer = "질문에 답변을 해주세요"
             return ai_answer
         
-        # 첫 응답일 경우 자소서에 대한 질문 생성
-        if new_dialog:
-            user_prompt = "This is My Personal Statement.\n\n" + user_input + \
-                "\n\nPlease create 2 questions for each item in Korean based on the contents written in the Personal Statement.\n\
-                    Please separate it by \n, and don't number it."
+        
+        # 꼬리 질문일 경우 사용자 답변을 기반으로 질문을 생성
+        if not question:
+            self.history_update("user", user_input)
+            # ai_answer = "꼬리질문이다이"
+            
             response = self.client.chat.completions.create(
                 model = self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
-                        Please create a question in Korean related to the user's answer"},
-                    {"role": "user", "content": user_prompt},
-                ],
+                messages=self.chat_history,
                 max_tokens=150,
                 n=1,
                 temperature=1
             )
-            ai_answer = response.choices[0].message.content                      
-        else:
-            user_prompt = self.chat_history + "\n\n" + user_input
-        
-        # 꼬리 질문일 경우 사용자 답변을 기반으로 질문을 생성
-        if reply:
-            ai_answer = "꼬리질문이다이"
-            
-            # response = self.client.chat.completions.create(
-            #     model = self.model,
-            #     messages=[
-            #         {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
-            #             Please create a question in Korean related to the user's answer"},
-            #         {"role": "user", "content": user_prompt},
-            #     ],
-            #     max_tokens=150,
-            #     n=1,
-            #     temperature=1
-            # )
-            # ai_answer = response.choices[0].message.content               
+            ai_answer = response.choices[0].message.content
+            self.history_update("assistant", ai_answer)
         # 꼬리 질문이 아닐 경우 질문 리스트에서 가져온 질문 사용
         else:
-            ai_answer = reply
+            ai_answer = question
          
-        
-        # 채팅 히스토리 기록
-        self.add_message("User: " + user_input + "\n")
-        self.add_message("AI: " + ai_answer+ "\n")
+        # # 채팅 히스토리 기록
+        # self.add_message("User: " + user_input + "\n")
+        # self.add_message("AI: " + ai_answer+ "\n")
         return ai_answer
     
     def generate_summary(self):
@@ -188,7 +179,7 @@ class Chatbot:
         return transcription.text
     
     def is_interviewed(self):
-        if self.chat_history == "":
+        if self.chat_history == []:
             self.text_box.insert(tk.END, "대화 내용이 없습니다. 먼저 Mock Interview를 진행해주세요.\n")
             return False
         else:
