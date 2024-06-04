@@ -31,7 +31,7 @@ class Gui_app:
         self.button_s.pack(pady=10)  # 상하 여백 추가
 
         self.button_t = tk.Button(self.root, text="Ai_Text 확인", 
-                                  command = lambda: print("Ai_text_check:",self.ut.ai_answer))
+                                  command = lambda: print("Ai_text_check:",self.ut.ai_reply))
         self.button_t.pack(pady=10)  # 상하 여백 추가
 
         self.button_interview_history = tk.Button(self.root, text="면접 전체 내용 확인", 

@@ -19,7 +19,7 @@ class Gui_utils:
         self.record_order = 0
         self.ai_answer_order = 0
         
-        self.ai_answer = "" #디버깅, None
+        self.ai_reply = "" #디버깅, None
         self.question_list = []
         self.question_count = 0
         self.all_qc = 0
@@ -50,46 +50,22 @@ class Gui_utils:
         tag_name = alignment + current_end  # 각 태그에 고유 이름을 부여
         text_widget.tag_add(tag_name, current_end, new_end)
         text_widget.tag_configure(tag_name, justify=alignment)
-
-    def start_interview(self):
-        # 자소서를 입력해야 open_custom_dialog함수에서 ai의 질문이 생성됨
-        if self.ai_answer == None:
-            self.text_box.insert(tk.END, "먼저 자기소개서를 입력해 주세요.\n")
-            return 
         
-        # for first question
-        print("start_interview questions, ai_answer ->-> ", self.ai_answer, "\n")
-        # ai_speech_path = self.cb.make_tts(self.ai_answer) # 디버깅 위해 임시 주석
-        ai_speech_path = "C:/workspace/docs/mock_gui/AiSpeech_0.mp3"
-        # speech_file_path = "C:/workspace/speech_0.mp3"
-        self.ask_question(self.ai_answer, ai_speech_path)
-        # self.root.after(1000, lambda: self.response_question(filename=self.record_filename))
-        return
-    
-    def ask_question(self, query, ai_speech_path):
-        self.text_box.insert(tk.END, f"Q: {query}" + "\n")
-        self.right_align()
-        
-        self.play_tts(ai_speech_path)
-
     def open_custom_dialog(self):
-        qs = self.cb.get_PersonalStatement('simple_questions.txt').replace("\n\n", "\n")
-        self.question_list = qs.split('\n')
-        self.question_list = list(reversed(self.question_list))
-        print("퀘리개수: ", len(self.question_list))
-        self.ai_answer = "안녕하십니까, 자기소개를 해주세요.\n"
-        return 
+        # qs = self.cb.get_PersonalStatement('simple_questions.txt').replace("\n\n", "\n")
+        # self.question_list = qs.split('\n')
+        # self.question_list = list(reversed(self.question_list))
+        # print("퀘리개수: ", len(self.question_list))
+        # self.ai_answer = "안녕하십니까, 자기소개를 해주세요.\n"
+        # return 
         def submit(input_box):
             user_input = input_box.get("1.0", "end-1c")
             if user_input:
                 popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
                 popup.after(2000, popup.destroy)
                 
-                self.ai_answer = self.cb.generate_response(user_input)
-                # Todo: 자소서 기반 질문 생성하고 스플릿 처리해서 변수에 저장
-                # Todo: 자기소개 부탁 질문 넣기
-                # q_list = questions.split('\n')
-                # q_list = ["1. 안녕하세요. 저는 광주광역시에 사는 박예진입니다아아다아다닷.", "2. 저는 똥멍청이에 부바킹입니다 크킄", "3. 하지만 강렬이를 사랑하죠 스슥"]
+                self.question_list = self.cb.generate_ps_questions(user_input)
+                self.ai_reply = "안녕하십니까, 자기소개를 해주세요.\n"
                 dialog.destroy()
             else:
                 messagebox.showinfo("Alert", "자기소개서를 입력해 주세요.")
@@ -112,42 +88,26 @@ class Gui_utils:
         # 제출 버튼 생성
         submit_button = Button(dialog, text="Submit", command=lambda: submit(input_box))
         submit_button.pack(pady=10)
-
-    def show_chat_history(self, history):
-        # def submit(input_box):
-        #     user_input = input_box.get("1.0", "end-1c")
-        #     if user_input:
-        #         popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
-        #         popup.after(2000, popup.destroy)
-                
-        #         self.ai_answer = self.cb.generate_response(user_input)
-        #         # Todo: 자소서 기반 질문 생성하고 스플릿 처리해서 변수에 저장
-        #         # Todo: 자기소개 부탁 질문 넣기
-        #         # q_list = questions.split('\n')
-        #         # q_list = ["1. 안녕하세요. 저는 광주광역시에 사는 박예진입니다아아다아다닷.", "2. 저는 똥멍청이에 부바킹입니다 크킄", "3. 하지만 강렬이를 사랑하죠 스슥"]
-        #         dialog.destroy()
-        #     else:
-        #         messagebox.showinfo("Alert", "자기소개서를 입력해 주세요.")
-
-        # 새 대화창 생성
-        dialog = Toplevel(self.root)
-        dialog.title("Input")
-        dialog.geometry("500x500")  # 대화창 크기 설정
-
-        # 라벨 생성
-        label = Label(dialog, text="면접 히스토리 확인")
-        label.pack(pady=10)
-
-        # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=30, width=50)
-        # entry = Entry(dialog, width=25)
-        # entry.pack(pady=5)
-        input_box.pack(pady=5)
-        input_box.insert(tk.END, history)
-
-        # 확인 버튼 생성
-        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
-        submit_button.pack(pady=10)
+        
+    def start_interview(self):
+        # 자소서를 입력해야 open_custom_dialog함수에서 ai의 질문이 생성됨
+        if self.question_list == []:
+            self.text_box.insert(tk.END, "먼저 자기소개서를 입력해 주세요.\n")
+            return 
+        
+        # for first question
+        print("start_interview questions, ai_answer: ", self.ai_reply, "\n")
+        ai_speech_path = self.cb.make_tts(self.ai_answer) # 디버깅 위해 임시 주석
+        # ai_speech_path = "AiSpeech_0.mp3" #디버깅용
+        self.ask_question(self.ai_reply, ai_speech_path)
+        # self.root.after(1000, lambda: self.response_question(filename=self.record_filename))
+        return
+    
+    def ask_question(self, query, ai_speech_path):
+        self.text_box.insert(tk.END, f"Q: {query}" + "\n")
+        self.right_align()
+        
+        self.play_tts(ai_speech_path)
 
     def play_tts(self, filename):
         if filename:
@@ -166,18 +126,26 @@ class Gui_utils:
         self.text_box.insert(tk.END, "A: " + "가보자고" + "\n")
         
         # 답변을 통해 query, tts 생성하고 인자 넘겨주기
-        self.proceed_conversation("가보자고")
-        return 
-        UserSpeech_filename = "UserSpeech_" + str(self.record_order) + ".wav"
-        pygame.mixer.music.load('ale.wav')
-        pygame.mixer.music.play()     
-        while pygame.mixer.music.get_busy():
-            continue  # MP3 재생이 끝날 때까지 기다림              
+        # self.proceed_conversation("가보자고")
+        # return 
+        
+        # 녹음 설정 값
         silence_threshold = 1.0  # 침묵 임계값 설정
         max_silence_blocks = 100  # 연속 침묵을 허용하는 블록 수
         silence_counter = 0  # 침묵 블록 카운터 초기화
         q = queue.Queue()  # 오디오 데이터를 저장할 큐
         
+        # 녹음 저장 파일 설정
+        UserSpeech_filename = "UserSpeech_" + str(self.record_order) + ".wav"
+        self.record_order += 1
+        
+        # 녹음 시작 효과음
+        pygame.mixer.music.load('beep.wav')
+        pygame.mixer.music.play()     
+        while pygame.mixer.music.get_busy():
+            continue  # MP3 재생이 끝날 때까지 기다림
+        
+        # 녹음 함수들
         def audio_callback(indata, frames, time, status):
             """이 콜백은 새로운 오디오 데이터가 도착할 때마다 호출됩니다."""
             volume_norm = np.linalg.norm(indata) * 10
@@ -208,12 +176,13 @@ class Gui_utils:
                 print(f"Unexpected error: {e}")
             finally:
                 print("recording finally")
+        
+        # 녹음 시작
         recording_thread()
-        self.record_order += 1
         
         # 답변 출력 위해 stt사용
         user_text = self.cb.make_stt(UserSpeech_filename)
-        print("유저텍스트:", user_text)
+        print("생성된 유저텍스트:", user_text)
         # user_text = "Test Textinput22"#make_stt(filename)
         self.text_box.insert(tk.END, "A: " + user_text + "\n")
         
@@ -239,7 +208,29 @@ class Gui_utils:
         self.root.after(3000, lambda: self.ask_question(ai_text, ai_speech_path))
         
         return ai_speech_path
-    
+
+    def show_chat_history(self, history):
+
+        # 새 대화창 생성
+        dialog = Toplevel(self.root)
+        dialog.title("Input")
+        dialog.geometry("500x500")  # 대화창 크기 설정
+
+        # 라벨 생성
+        label = Label(dialog, text="면접 히스토리 확인")
+        label.pack(pady=10)
+
+        # 텍스트 입력 필드 생성
+        input_box = Text(dialog, height=30, width=50)
+        # entry = Entry(dialog, width=25)
+        # entry.pack(pady=5)
+        input_box.pack(pady=5)
+        input_box.insert(tk.END, history)
+
+        # 확인 버튼 생성
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button.pack(pady=10)
+        
     def right_align(self):
         new_end = self.text_box.index("end-1c")
         tag_name = 'right' + new_end.replace('.', '_')
