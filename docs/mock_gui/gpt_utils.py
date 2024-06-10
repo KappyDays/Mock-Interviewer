@@ -3,6 +3,7 @@ from openai import OpenAI
 from pathlib import Path
 import warnings
 import tkinter as tk
+import re
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -23,10 +24,11 @@ class Chatbot:
         self.text_box = text_box
         
         self.chat_history = []
-        self.ps = self.get_PersonalStatement("ps.txt")
+        self.real_history = ""
+        # self.ps = self.get_PersonalStatement("ps.txt")
         
         self.max_length = max_length
-        self.max_tokens = 150
+        self.max_tokens = 4000
         self.n = 1
         self.temperature = 1
 
@@ -52,29 +54,53 @@ class Chatbot:
         #     updated_history = updated_history[-self.max_length:]
         self.chat_history.append({"role": role, "content": content})
         
+    def real_history_update(self, role, content):
+        self.real_history += role + ": " + content + "\n"
+        if role == "A":
+            self.real_history += "\n"
+        
     def generate_ps_questions(self, user_input, reply=False, new_dialog=False):
-        print("자소서 기반 질문 생성! 들어온 프롬프트:", user_input)
-        # 자소서 입력이 안된 경우
-        if user_input == "":
-            ai_answer = "질문에 답변을 해주세요"
-            return ai_answer
+        def process_answer(ai_answer):
+            q_list = []
+            # 질문을 나눠서 질문 리스트 생성
+            question_list = ai_answer.split("\n")
+            # 질문 사이사이 빈 문자열 제거
+            filtered_question_list = [question for question in question_list if question != ""]
+            
+            for question in filtered_question_list:
+                q_list.append(re.sub(r'^[\d-]+\.\s*|^-+\s*', '', question))
+                
+            return q_list[::-1]
+        
+        # print("자소서 기반 질문 생성! 들어온 프롬프트:", user_input)
+        # # 자소서 입력이 안된 경우
+        # if user_input == "":
+        #     ai_answer = "질문에 답변을 해주세요"
+        #     return ai_answer
         
         # GPT용 시스템 입력 생성 후 히스토리 업데이트
-        system_input = "You are a helpful Mock Interviewer.\nPlease create a question in Korean related to the user's answer"
+        system_input =  "You are a helpful Mock Interviewer.\n" + \
+            "Your task is to generate thoughtful and relevant interview questions in Korean based on the provided Personal Statement.\n" + \
+            "Each paragraph should have exactly 2 questions, Do not provide any additional commentary or text. Just provide the questions."
         self.history_update("system", system_input)
                 
         # 자소서 입력이 된 경우, 자소서 기반 질문 생성
-        user_prompt = "This is My Personal Statement.\n\n" + user_input + \
-            "\n\nPlease create 2 questions for each item in Korean based on the contents written in the Personal Statement.\n\
-            Please separate it by \n, and don't number it."
+        user_prompt = f"This is My Personal Statement:\n{user_input}\n\n" + \
+                "For each paragraph above, generate exactly 2 interview questions in Korean." + \
+                "Provide only the questions without any additional text."
+            #   "Do not provide any additional commentary or text. Just provide the questions."
+
+        # user_prompt = "This is My Personal Statement.\n" + \
+        #     "Please create 2 questions for each paragraph in the Personal Statement in Korean.\n" + \
+        #     "Don't say anything other than a question sentence.\n\n" + user_input
         self.history_update("user", user_prompt) # 히스토리 업데이트
         
         # GPT 응답 생성
         response = self.client.chat.completions.create(
             model = self.model,
             messages=self.chat_history,
-            max_tokens=self.max_tokens,
-            n=self.n,
+            # max_tokens=self.max_tokens,
+            # n=self.n,
             temperature=self.temperature
         )
         
@@ -82,13 +108,17 @@ class Chatbot:
         ai_answer = response.choices[0].message.content
         self.history_update("assistant", ai_answer)
         # 질문을 나눠서 질문 리스트 생성
-        question_list = ai_answer.split("\n")
+        print("\n질문 생성됨 ==== \n", ai_answer)
+        question_list = process_answer(ai_answer)
+        # question_list = ai_answer.split("\n")
+        print("\n처리된 질문\n", question_list)
         print("질문 개수: ", len(question_list))
         return question_list
 
     # 응답 생성
     def generate_response(self, user_input, question=False): #follow question
-        print("들어온 프롬프트:", user_input)
+        self.history_update("user", user_input)
+        self.real_history_update("A", user_input)
         # 인터뷰 도중 유저의 입력이 없을 경우
         if user_input == "":
             ai_answer = "질문에 답변을 해주세요"
@@ -97,41 +127,42 @@ class Chatbot:
         
         # 꼬리 질문일 경우 사용자 답변을 기반으로 질문을 생성
         if not question:
-            self.history_update("user", user_input)
+            system_input = "You are a helpful Mock Interviewer. Your task is to generate thoughtful and relevant one interview question in Korean based on the provided User Input."
+            self.history_update("system", system_input)            
             # ai_answer = "꼬리질문이다이"
             
             response = self.client.chat.completions.create(
                 model = self.model,
                 messages=self.chat_history,
-                max_tokens=150,
-                n=1,
-                temperature=1
+                max_tokens=self.max_tokens,
+                # n=1,
+                temperature=self.temperature
             )
             ai_answer = response.choices[0].message.content
             self.history_update("assistant", ai_answer)
+            self.real_history_update("Q", ai_answer)
         # 꼬리 질문이 아닐 경우 질문 리스트에서 가져온 질문 사용
         else:
             ai_answer = question
-         
-        # # 채팅 히스토리 기록
-        # self.add_message("User: " + user_input + "\n")
-        # self.add_message("AI: " + ai_answer+ "\n")
+            self.history_update("assistant", ai_answer)
+            self.real_history_update("Q", ai_answer)
         return ai_answer
     
     def generate_summary(self):
         if not self.is_interviewed(): return
-        
+
         response = self.client.chat.completions.create(
             model = self.model,
             messages=[
                 {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
                     Look at the following whole conversation and give me a summary."},
-                {"role": "user", "content": self.chat_history},
+                {"role": "user", "content": self.real_history},
             ],
-            max_tokens=150,
-            temperature=1
+            max_tokens=self.max_tokens,
+            temperature=self.temperature
         )
         summary = response.choices[0].message.content
+        print("서머리리: ", summary)
         return summary
     
     def evaluate_interview(self):
@@ -149,12 +180,13 @@ class Chatbot:
                     3. Is the interviewer's ability to understand the point of the question appropriate?\n\
                     4. Is your major knowledge (technical) utilization ability, related work experience, and skill level sufficient?\n\
                     5. Is creativity, willpower and developability (self-improvement needs), vision, and future plans well described?"},
-                {"role": "user", "content": self.chat_history},
+                {"role": "user", "content": self.real_history},
             ],
-            max_tokens=150,
-            temperature=1
+            max_tokens=self.max_tokens,
+            temperature=self.temperature
         )
         evaluation = response.choices[0].message.content
+        
         return evaluation
 
     def make_tts(self, prompt):
@@ -183,12 +215,14 @@ class Chatbot:
             self.text_box.insert(tk.END, "대화 내용이 없습니다. 먼저 Mock Interview를 진행해주세요.\n")
             return False
         else:
+            print("인터뷰 내용 있음!!")
+            print(self.real_history)
             True
         
-    def get_PersonalStatement(self, txt_path):
-        personal_statement = ""
-        with open(txt_path, 'r', encoding='utf-8') as fp:
-            lines = fp.readlines()
-            for line in lines:
-                personal_statement += line
-        return personal_statement
+    # def get_PersonalStatement(self, txt_path):
+    #     personal_statement = ""
+    #     with open(txt_path, 'r', encoding='utf-8') as fp:
+    #         lines = fp.readlines()
+    #         for line in lines:
+    #             personal_statement += line
+    #     return personal_statement

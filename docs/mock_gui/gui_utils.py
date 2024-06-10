@@ -22,7 +22,7 @@ class Gui_utils:
         self.ai_reply = "" #디버깅, None
         self.question_list = []
         self.question_count = 0
-        self.all_qc = 0
+        self.all_qc = 1
         
         self.cb = chatbot
         self.requestion = False
@@ -51,36 +51,34 @@ class Gui_utils:
         text_widget.tag_add(tag_name, current_end, new_end)
         text_widget.tag_configure(tag_name, justify=alignment)
         
-    def open_custom_dialog(self):
-        # qs = self.cb.get_PersonalStatement('simple_questions.txt').replace("\n\n", "\n")
-        # self.question_list = qs.split('\n')
-        # self.question_list = list(reversed(self.question_list))
-        # print("퀘리개수: ", len(self.question_list))
-        # self.ai_answer = "안녕하십니까, 자기소개를 해주세요.\n"
-        # return 
+    def add_PersonalStatement(self):
         def submit(input_box):
             user_input = input_box.get("1.0", "end-1c")
             if user_input:
                 popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
                 popup.after(2000, popup.destroy)
                 
+                # 자소서 항목당 질문 2개씩 생성
                 self.question_list = self.cb.generate_ps_questions(user_input)
-                self.ai_reply = "안녕하십니까, 자기소개를 해주세요.\n"
+                
+                # 모의 면접관의 첫 질문 
+                self.ai_reply = "안녕하십니까 지원자님. 자기소개를 해주세요."
+                self.cb.real_history_update("Q", self.ai_reply)
                 dialog.destroy()
             else:
                 messagebox.showinfo("Alert", "자기소개서를 입력해 주세요.")
 
         # 새 대화창 생성
         dialog = Toplevel(self.root)
-        dialog.title("Input")
-        dialog.geometry("400x400")  # 대화창 크기 설정
+        dialog.title("Add Personal Statement")
+        dialog.geometry("600x700")  # 대화창 크기 설정
 
         # 라벨 생성
         label = Label(dialog, text="자기소개서를 입력해 주세요.")
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=10, width=40)
+        input_box = Text(dialog, height=40, width=70)
         # entry = Entry(dialog, width=25)
         # entry.pack(pady=5)
         input_box.pack(pady=5)
@@ -97,10 +95,12 @@ class Gui_utils:
         
         # for first question
         print("start_interview questions, ai_answer: ", self.ai_reply, "\n")
-        ai_speech_path = self.cb.make_tts(self.ai_answer) # 디버깅 위해 임시 주석
+        ai_speech_path = self.cb.make_tts(self.ai_reply) # 디버깅 위해 임시 주석
         # ai_speech_path = "AiSpeech_0.mp3" #디버깅용
         self.ask_question(self.ai_reply, ai_speech_path)
         # self.root.after(1000, lambda: self.response_question(filename=self.record_filename))
+        # self.play_tts(ai_speech_path)
+        # self.root.after(2000, self.record_question)
         return
     
     def ask_question(self, query, ai_speech_path):
@@ -109,7 +109,7 @@ class Gui_utils:
         
         self.play_tts(ai_speech_path)
 
-    def play_tts(self, filename):
+    def play_tts(self, filename, record=True):
         if filename:
             print(f"Loaded {filename}..")
             pygame.mixer.music.load(filename)
@@ -118,20 +118,13 @@ class Gui_utils:
                 continue  # MP3 재생이 끝날 때까지 기다림
         else:
             print("No file loaded")
-        self.root.after(2000, self.record_question)
+        if record:
+            self.root.after(2000, self.record_question)
 
     def record_question(self):
-        print("유저텍스트:", "가보자고")
-        # user_text = "Test Textinput22"#make_stt(filename)
-        self.text_box.insert(tk.END, "A: " + "가보자고" + "\n")
-        
-        # 답변을 통해 query, tts 생성하고 인자 넘겨주기
-        # self.proceed_conversation("가보자고")
-        # return 
-        
         # 녹음 설정 값
         silence_threshold = 1.0  # 침묵 임계값 설정
-        max_silence_blocks = 100  # 연속 침묵을 허용하는 블록 수
+        max_silence_blocks = 50  # 연속 침묵을 허용하는 블록 수
         silence_counter = 0  # 침묵 블록 카운터 초기화
         q = queue.Queue()  # 오디오 데이터를 저장할 큐
         
@@ -141,6 +134,7 @@ class Gui_utils:
         
         # 녹음 시작 효과음
         pygame.mixer.music.load('beep.wav')
+        pygame.mixer.music.set_volume(0.2)  # 볼륨을 50%로 설정
         pygame.mixer.music.play()     
         while pygame.mixer.music.get_busy():
             continue  # MP3 재생이 끝날 때까지 기다림
@@ -184,15 +178,22 @@ class Gui_utils:
         user_text = self.cb.make_stt(UserSpeech_filename)
         print("생성된 유저텍스트:", user_text)
         # user_text = "Test Textinput22"#make_stt(filename)
-        self.text_box.insert(tk.END, "A: " + user_text + "\n")
+        self.text_box.insert(tk.END, "A: " + user_text + "\n\n")
         
         # 답변을 통해 query, tts 생성하고 인자 넘겨주기
         self.proceed_conversation(user_text)
 
     def proceed_conversation(self, user_text):
         # 자소서 기반 질문이 끝나고, reply까지 완료하면 면접 종료
-        if self.question_list == [] and self.all_qc % 2 != 0:
+        if self.question_list == [] and self.all_qc % 2 == 1:
+            ai_text = "네, 알겠습니다. 수고하셨습니다. 면접이 종료되었습니다. 면접 내용을 확인해주세요."
+            ai_speech_path = self.cb.make_tts(ai_text)
+            self.play_tts(ai_speech_path, record=False)
             self.text_box.insert(tk.END, "\n면접이 종료되었습니다. 면접 내용을 확인해주세요.\n")
+            # pygame.mixer.music.load(filename)
+            # pygame.mixer.music.play()
+            # while pygame.mixer.music.get_busy():
+            #     continue  # MP3 재생이 끝날 때까지 기다림
             return
         
         # 답변을 통해 query, tts 생성하고 인자 넘겨주기
@@ -200,6 +201,8 @@ class Gui_utils:
             ai_text = self.cb.generate_response(user_text)
         else: # 미리 생성된 자소서 기반 질문 사용
             ai_text = self.cb.generate_response(user_text, self.question_list.pop())
+            if self.all_qc == 1: #첫 번째 질문이면 인사 추가
+                ai_text  = "네, 반갑습니다." + ai_text
         self.all_qc += 1
         
         ai_speech_path = self.cb.make_tts(ai_text)
@@ -209,19 +212,49 @@ class Gui_utils:
         return ai_speech_path
 
     def show_chat_history(self, history):
+        if history == "":
+            self.text_box.insert(tk.END, "면접 내용 확인에 앞서 면접을 진행해 주세요.\n")
+            return 
+            
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Input")
         dialog.geometry("500x500")  # 대화창 크기 설정
 
         # 라벨 생성
-        label = Label(dialog, text="면접 히스토리 확인")
+        label = Label(dialog, text="면접 내용 확인")
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
         input_box = Text(dialog, height=30, width=50)
         input_box.pack(pady=5)
         input_box.insert(tk.END, history)
+        input_box.config(state=tk.DISABLED)
+
+        # 확인 버튼 생성
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button.pack(pady=10)
+        
+    def show_evaluation(self, history):
+        if history == []:
+            self.text_box.insert(tk.END, "면접 내용 평가에 앞서 면접을 진행해 주세요.\n")
+            return
+        
+        evaluation = self.cb.evaluate_interview()
+            
+        # 새 대화창 생성
+        dialog = Toplevel(self.root)
+        dialog.title("Input")
+        dialog.geometry("500x500")  # 대화창 크기 설정
+
+        # 라벨 생성
+        label = Label(dialog, text="면접 평가 확인")
+        label.pack(pady=10)
+        # 텍스트 입력 필드 생성
+        input_box = Text(dialog, height=30, width=50)
+        input_box.pack(pady=5)
+        input_box.insert("1.0", evaluation)
+        input_box.config(state=tk.DISABLED)
 
         # 확인 버튼 생성
         submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
