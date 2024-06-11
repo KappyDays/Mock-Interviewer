@@ -55,8 +55,9 @@ class Gui_utils:
         def submit(input_box):
             user_input = input_box.get("1.0", "end-1c")
             if user_input:
-                popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
-                popup.after(2000, popup.destroy)
+                self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
+                # popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
+                # popup.after(2000, popup.destroy)
                 
                 # 자소서 항목당 질문 2개씩 생성
                 self.question_list = self.cb.generate_ps_questions(user_input)
@@ -234,24 +235,41 @@ class Gui_utils:
         # 확인 버튼 생성
         submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
         submit_button.pack(pady=10)
+
+    def show_summary(self):
+        summary = self.cb.generate_summary()
+            
+        # 새 대화창 생성
+        dialog = Toplevel(self.root)
+        dialog.title("Input")
+        dialog.geometry("600x600")  # 대화창 크기 설정
+
+        # 라벨 생성
+        label = Label(dialog, text="면접 요약 확인")
+        label.pack(pady=10)
+        # 텍스트 입력 필드 생성
+        input_box = Text(dialog, height=40, width=75)
+        input_box.pack(pady=5)
+        input_box.insert("1.0", summary)
+        input_box.config(state=tk.DISABLED)
+
+        # 확인 버튼 생성
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button.pack(pady=10)
         
-    def show_evaluation(self, history):
-        if history == []:
-            self.text_box.insert(tk.END, "면접 내용 평가에 앞서 면접을 진행해 주세요.\n")
-            return
-        
+    def show_evaluation(self): 
         evaluation = self.cb.evaluate_interview()
             
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Input")
-        dialog.geometry("500x500")  # 대화창 크기 설정
+        dialog.geometry("600x700")  # 대화창 크기 설정
 
         # 라벨 생성
         label = Label(dialog, text="면접 평가 확인")
         label.pack(pady=10)
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=30, width=50)
+        input_box = Text(dialog, height=40, width=75)
         input_box.pack(pady=5)
         input_box.insert("1.0", evaluation)
         input_box.config(state=tk.DISABLED)

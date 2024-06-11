@@ -46,11 +46,11 @@ class Gui_app:
         self.button_interview_history.pack(pady=10)  # 상하 여백 추가
 
         self.button_interview_summary = tk.Button(self.root, text="면접 요약 확인", 
-                                        command = lambda: print("Ai_interview_summary:\n", self.gt.generate_summary()))
+                                        command = self.ut.show_summary)
         self.button_interview_summary.pack(pady=10)  # 상하 여백 추가
         
         self.button_interview_evaluate = tk.Button(self.root, text="면접 내용 평가", 
-                                        command = lambda: self.ut.show_evaluation(self.gt.chat_history))
+                                        command = self.ut.show_evaluation)
         self.button_interview_evaluate.pack(pady=10)  # 상하 여백 추가
                         
     def test(self):
