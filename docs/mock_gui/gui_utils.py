@@ -73,19 +73,20 @@ class Gui_utils:
         dialog = Toplevel(self.root)
         dialog.title("Add Personal Statement")
         dialog.geometry("600x700")  # 대화창 크기 설정
+        dialog.configure(bg='lightblue')
 
         # 라벨 생성
-        label = Label(dialog, text="자기소개서를 입력해 주세요.")
+        label = Label(dialog, text="자기소개서를 입력해 주세요.", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=70)
+        input_box = Text(dialog, height=40, width=70, bg="lightyellow")
         # entry = Entry(dialog, width=25)
         # entry.pack(pady=5)
         input_box.pack(pady=5)
 
         # 제출 버튼 생성
-        submit_button = Button(dialog, text="Submit", command=lambda: submit(input_box))
+        submit_button = Button(dialog, text="Submit", command=lambda: submit(input_box), bg="#FFB6C1")
         submit_button.pack(pady=10)
         
     def start_interview(self):
@@ -221,19 +222,20 @@ class Gui_utils:
         dialog = Toplevel(self.root)
         dialog.title("Input")
         dialog.geometry("500x500")  # 대화창 크기 설정
+        dialog.configure(bg='lightblue')
 
         # 라벨 생성
         label = Label(dialog, text="면접 내용 확인")
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=30, width=50)
+        input_box = Text(dialog, height=30, width=50, bg="lightyellow")
         input_box.pack(pady=5)
         input_box.insert(tk.END, history)
         input_box.config(state=tk.DISABLED)
 
         # 확인 버튼 생성
-        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
         submit_button.pack(pady=10)
 
     def show_summary(self):
@@ -243,18 +245,19 @@ class Gui_utils:
         dialog = Toplevel(self.root)
         dialog.title("Input")
         dialog.geometry("600x600")  # 대화창 크기 설정
+        dialog.configure(bg='lightblue')
 
         # 라벨 생성
         label = Label(dialog, text="면접 요약 확인")
         label.pack(pady=10)
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=75)
+        input_box = Text(dialog, height=40, width=75, bg="lightyellow")
         input_box.pack(pady=5)
         input_box.insert("1.0", summary)
         input_box.config(state=tk.DISABLED)
 
         # 확인 버튼 생성
-        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
         submit_button.pack(pady=10)
         
     def show_evaluation(self): 
@@ -264,18 +267,19 @@ class Gui_utils:
         dialog = Toplevel(self.root)
         dialog.title("Input")
         dialog.geometry("600x700")  # 대화창 크기 설정
+        dialog.configure(bg='lightblue')
 
         # 라벨 생성
         label = Label(dialog, text="면접 평가 확인")
         label.pack(pady=10)
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=75)
+        input_box = Text(dialog, height=40, width=75, bg="lightyellow")
         input_box.pack(pady=5)
         input_box.insert("1.0", evaluation)
         input_box.config(state=tk.DISABLED)
 
         # 확인 버튼 생성
-        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy())
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
         submit_button.pack(pady=10)
         
     def right_align(self):

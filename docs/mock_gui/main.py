@@ -5,13 +5,26 @@ from gpt_utils import *
 import pygame
 
 pygame.mixer.init()
+# 색상 설정
+colors = {
+    "Pale Pink": "#FFB6C1",
+    "Mint Green": "#98FF98",
+    "Lavender": "#E6E6FA",
+    "Peach": "#FFDAB9",
+    "Soft Yellow": "#FFFACD",
+    "Coral": "#F08080",
+    "Powder Blue": "#B0E0E6",
+    "Blush Pink": "#F4C2C2",
+    "Pastel Purple": "#DDA0DD",
+    "Soft Beige": "#F5F5DC"
+}
 
 class Gui_app:
     def __init__(self, root):
         self.root = root
         
-        self.text_box = tk.Text(self.root, height=40, width=90)
-        self.text_box.pack(pady=20)  # 상하 여백 추가
+        self.text_box = tk.Text(self.root, height=40, width=90, bg="lightyellow")
+        self.text_box.pack()  # 상하 여백 추가
         # self.temp_box = tk.Text(self.root)
         
         self.gt = Chatbot(root, self.text_box)
@@ -26,11 +39,11 @@ class Gui_app:
         2. 면접 시작
         """
         self.button_start = tk.Button(self.root, text="Start", 
-                                      command = self.ut.start_interview)
+                                      command = self.ut.start_interview, bg="#FFB6C1")
         self.button_start.pack(pady=10)  # 상하 여백 추가
 
         self.button_s = tk.Button(self.root, text="자소서 추가", 
-                                  command = self.ut.add_PersonalStatement)
+                                  command = self.ut.add_PersonalStatement, bg="#E6E6FA")
         self.button_s.pack(pady=10)  # 상하 여백 추가
 
         self.button_t = tk.Button(self.root, text="chat_history 확인", 
@@ -42,22 +55,34 @@ class Gui_app:
         self.button_t2.pack(pady=10)  # 상하 여백 추가        
 
         self.button_interview_history = tk.Button(self.root, text="면접 전체 내용 확인", 
-                                  command = lambda: self.ut.show_chat_history(self.gt.real_history))
+                                  command = lambda: self.ut.show_chat_history(self.gt.real_history), bg="lightgreen")
         self.button_interview_history.pack(pady=10)  # 상하 여백 추가
 
         self.button_interview_summary = tk.Button(self.root, text="면접 요약 확인", 
-                                        command = self.ut.show_summary)
+                                        command = self.ut.show_summary, bg="lightgreen")
         self.button_interview_summary.pack(pady=10)  # 상하 여백 추가
         
         self.button_interview_evaluate = tk.Button(self.root, text="면접 내용 평가", 
-                                        command = self.ut.show_evaluation)
+                                        command = self.ut.show_evaluation, bg="lightgreen")
         self.button_interview_evaluate.pack(pady=10)  # 상하 여백 추가
+        
+        # 체크박스 생성
+        self.var1 = tk.IntVar()
+        self.checkbox1 = tk.Checkbutton(root, text="Option 1", variable=self.var1)
+        self.checkbox1.pack(pady=10)  # 여백 추가
                         
     def test(self):
         print("yesgogo!!!!!!!!")
         
 # 메인 윈도우 생성
 root = tk.Tk()
+label = tk.Label(root, text="Mock Interviewer", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
+
+label.pack(pady=10)
+
+# frame = tk.Frame(root, bg="yellow", bd=5)
+# frame.pack(padx=10, pady=10)
+root.configure(bg='lightblue')
 root.title("Mock Interviewer")
 root.geometry("800x900")
 app = Gui_app(root)
