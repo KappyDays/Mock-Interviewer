@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import Toplevel, Label, Entry, Button, Text, messagebox, filedialog
 from gpt_utils import *
+from connect_db import *
 import pdb
 import pygame
 import time
@@ -11,7 +12,7 @@ import numpy as np
 import queue
 
 class Gui_utils:
-    def __init__(self, root, text_box, chatbot:Chatbot):
+    def __init__(self, root, text_box, var1, var2, chatbot:Chatbot, db:ConnectDB):
         self.root = root
         self.question_queue = queue.Queue()
         self.text_box = text_box
@@ -25,7 +26,11 @@ class Gui_utils:
         self.all_qc = 1
         
         self.cb = chatbot
+        self.db = db
         self.requestion = False
+        
+        self.var1 = var1
+        self.var2 = var2
         
     def show_temporary_alert(self, window, message, delay=2000):
         # 메시지를 보여주는 팝업 창 생성
@@ -196,6 +201,10 @@ class Gui_utils:
             # pygame.mixer.music.play()
             # while pygame.mixer.music.get_busy():
             #     continue  # MP3 재생이 끝날 때까지 기다림
+            
+            # 면접 내용 수집에 동의한 경우, 면접 종료 후 면접 내용 저장
+            if self.var1.get():
+                self.save_chat_history()
             return
         
         # 답변을 통해 query, tts 생성하고 인자 넘겨주기
@@ -213,6 +222,34 @@ class Gui_utils:
         
         return ai_speech_path
 
+    def save_chat_history(self):
+        self.cb.real_history = "Q: 안녕하세요, 자기소개를 해주세요.\nA: 안녕하세요, 저는 김지원입니다. 대학교에서 컴퓨터공학을 전공하였고, 현재는 인공지능 개발자로 일하고 있습니다.\n\nQ: 무슨 인공지능을 개발하고 있나요?\nA: 저는 강력 인공지능을 개발하고 있습니다.\n\n"
+        print(f"리얼히스토리 확인 =====\n{self.cb.real_history}")
+        if self.cb.real_history == "":
+            self.text_box.insert(tk.END, "면접 내용이 없습니다.\n")
+            return
+
+        temp_history = self.cb.real_history.strip().split('\n')
+        temp_history = [temp for temp in temp_history if temp != '']
+        print(temp_history)
+        Q_list = []
+        A_list = []
+        for temp in temp_history:
+            if temp[0] == 'Q':
+                Q_list.append(temp[3:])
+            elif temp[0] == 'A':
+                A_list.append(temp[3:])
+            else:
+                print("append error")
+        
+        print(Q_list)        
+        print(A_list)
+        assert len(Q_list) == len(A_list)
+        
+        for i in range(len(Q_list)):
+            self.db.insert_interview_data(Q_list[i], A_list[i])
+            
+        
     def show_chat_history(self, history):
         if history == "":
             self.text_box.insert(tk.END, "면접 내용 확인에 앞서 면접을 진행해 주세요.\n")
@@ -225,7 +262,7 @@ class Gui_utils:
         dialog.configure(bg='lightblue')
 
         # 라벨 생성
-        label = Label(dialog, text="면접 내용 확인")
+        label = Label(dialog, text="면접 내용 확인", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
@@ -237,21 +274,43 @@ class Gui_utils:
         # 확인 버튼 생성
         submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
         submit_button.pack(pady=10)
+        
+    def make_customized_mock_interviewer(self): 
+        # evaluation = self.cb.evaluate_interview()
+            
+        # 새 대화창 생성
+        dialog = Toplevel(self.root)
+        dialog.title("Customizing")
+        dialog.geometry("600x700")  # 대화창 크기 설정
+        dialog.configure(bg='lightblue')
 
+        # 라벨 생성
+        label = Label(dialog, text="모의 면접관 제작", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
+        label.pack(pady=10)
+        # 텍스트 입력 필드 생성
+        input_box = Text(dialog, height=35, width=70, bg="lightyellow")
+        input_box.pack(pady=5)
+        # input_box.insert("1.0", evaluation)
+        input_box.config(state=tk.DISABLED)
+
+        # 확인 버튼 생성
+        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
+        submit_button.pack(pady=10)
+        
     def show_summary(self):
         summary = self.cb.generate_summary()
             
         # 새 대화창 생성
         dialog = Toplevel(self.root)
-        dialog.title("Input")
-        dialog.geometry("600x600")  # 대화창 크기 설정
+        dialog.title("Summary")
+        dialog.geometry("600x700")  # 대화창 크기 설정
         dialog.configure(bg='lightblue')
 
         # 라벨 생성
-        label = Label(dialog, text="면접 요약 확인")
+        label = Label(dialog, text="면접 요약 확인", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
         label.pack(pady=10)
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=75, bg="lightyellow")
+        input_box = Text(dialog, height=35, width=75, bg="lightyellow")
         input_box.pack(pady=5)
         input_box.insert("1.0", summary)
         input_box.config(state=tk.DISABLED)
@@ -265,15 +324,15 @@ class Gui_utils:
             
         # 새 대화창 생성
         dialog = Toplevel(self.root)
-        dialog.title("Input")
+        dialog.title("Evaluation")
         dialog.geometry("600x700")  # 대화창 크기 설정
         dialog.configure(bg='lightblue')
 
         # 라벨 생성
-        label = Label(dialog, text="면접 평가 확인")
+        label = Label(dialog, text="면접 평가 확인", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
         label.pack(pady=10)
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=75, bg="lightyellow")
+        input_box = Text(dialog, height=35, width=70, bg="lightyellow")
         input_box.pack(pady=5)
         input_box.insert("1.0", evaluation)
         input_box.config(state=tk.DISABLED)
