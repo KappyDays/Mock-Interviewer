@@ -24,10 +24,31 @@ class Gui_app:
     def __init__(self, root):
         self.root = root
         
-        self.text_box = tk.Text(self.root, height=35, width=90, bg="lightyellow")
-        self.text_box.pack()  # 상하 여백 추가
-        # self.temp_box = tk.Text(self.root)
-
+        self.text_box = tk.Text(self.root, height=35, width=85, bg="lightyellow")
+        self.text_box.pack()
+        self.text_box.insert("1.0", "면접 내용은 여기에 기록됩니다.\n")
+        # self.text_box.config(state="disabled")
+        
+        self.intro_box = tk.Text(self.root, height=12, width=40, bg="#FFB6C1")
+        self.intro_box.place(x=30, y=520)
+        self.intro_box.insert("1.0", "[사용법]\n")
+        self.intro_box.tag_configure("center", justify='center')
+        self.intro_box.tag_add("center", "1.0", "2.0")
+        
+        self.intro_box.tag_configure("left", justify='center')
+        self.intro_box.tag_add("left", "2.0", "5.0")
+        self.intro_box.insert(tk.END, "1. 자기소개서 추가\n2. 면접 시작\n3. 면접 종료 후 요약 및 평가 확인\n\n")
+        
+        self.intro_box.insert(tk.END, "[맞춤형 면접관 생성 방법]\n")
+        self.intro_box.tag_configure("center", justify='center')
+        self.intro_box.tag_add("center", "6.0", "7.0")
+        
+        self.intro_box.tag_configure("left", justify='center')
+        self.intro_box.tag_add("left", "7.0", "end")
+        self.intro_box.insert(tk.END, "1. 면접 내용 수집 동의 후 면접 진행\n2. 맞춤형 면접관 생성 클릭\n3. 맞충형 면접관 사용 체크\n")
+        self.intro_box.config(state="disabled")
+            
+        
         # 체크박스 생성
         self.var1 = tk.IntVar()
         self.checkbox1 = tk.Checkbutton(root, text="면접 내용 수집에 동의(맞춤형 면접 제공)", variable=self.var1, bg="#FFDAB9")
@@ -42,15 +63,8 @@ class Gui_app:
         self.db = ConnectDB()
         self.ut = Gui_utils(root, self.text_box, self.var1, self.var2, self.gt, self.db)
 
-        # self.button_temp = tk.Button(self.root, text="Test input", 
-        #                               command = lambda: print("hihi"))
-        # self.button_temp.pack(pady=10)  # 상하 여백 추가
         
-        """
-        1. 자소서 입력(자소서 항목 당 질문 생성 + 첫 질문(자기소개 요청))
-        2. 면접 시작
-        """
-        self.button_start = tk.Button(self.root, text="Start", 
+        self.button_start = tk.Button(self.root, text="면접 시작", 
                                       command = self.ut.start_interview, bg="#FFB6C1")
         self.button_start.pack(pady=10)  # 상하 여백 추가
 

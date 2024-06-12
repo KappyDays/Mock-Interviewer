@@ -37,15 +37,6 @@ class Chatbot:
         self.model = "gpt-3.5-turbo"
         self.fine_tuned_model = "ft:gpt-3.5-turbo-0125:personal:60mock:9W2XDE5J"
         
-        
-    # def add_message(self, message):
-    #     # 대화 추가 전에 최대 길이를 초과할지 확인하고 조정
-    #     updated_history = self.chat_history + "\n" + message
-    #     if len(updated_history) > self.max_length:
-    #         # 토큰을 줄여 최대 길이에 맞춤
-    #         updated_history = updated_history[-self.max_length:]
-    #     self.chat_history = updated_history
-
     def history_update(self, role, content):
         # 대화 추가 전에 최대 길이를 초과할지 확인하고 조정
         # updated_history = self.chat_history + "\n" + message
@@ -149,15 +140,15 @@ class Chatbot:
     
     def generate_summary(self):
         # 디버깅용 
-        self.real_history = """
-Q: 안녕하세요, 자기소개 해주세요.
-A: 안녕하세요, 이번에 금융결제원에 지원한 홍길동입니다.
+#         self.real_history = """
+# Q: 안녕하세요, 자기소개 해주세요.
+# A: 안녕하세요, 이번에 금융결제원에 지원한 홍길동입니다.
 
-Q. 어떤 기술이나 지식을 통해 금융결제원에서 제공하는 서비스를 개선하고자 하는 것으로 귀결되었나요? 어떤 기술적 도전에 직면하여 어떻게 극복했나요?
-A: 제가 공부한 Java programming을 통해 금융결제원에서 제공하는 UI 서비스를 개선하고자 합니다.
+# Q. 어떤 기술이나 지식을 통해 금융결제원에서 제공하는 서비스를 개선하고자 하는 것으로 귀결되었나요? 어떤 기술적 도전에 직면하여 어떻게 극복했나요?
+# A: 제가 공부한 Java programming을 통해 금융결제원에서 제공하는 UI 서비스를 개선하고자 합니다.
 
-Q. 금융결제원의 서비스를 통해 안전성과 편리함을 느낀 부분에 대해 좀 더 구체적으로 설명해 주실 수 있을까요? 실제 사용자 입장에서 어떤 점이 특히 강조되는가요?
-A. 실제 사용자 입장에서 금융결제원의 보안에 안전성을 느낀 적 있습니다. 또한 UI가 체계적이라 편리함을 느꼈습니다."""
+# Q. 금융결제원의 서비스를 통해 안전성과 편리함을 느낀 부분에 대해 좀 더 구체적으로 설명해 주실 수 있을까요? 실제 사용자 입장에서 어떤 점이 특히 강조되는가요?
+# A. 실제 사용자 입장에서 금융결제원의 보안에 안전성을 느낀 적 있습니다. 또한 UI가 체계적이라 편리함을 느꼈습니다."""
         if not self.is_interviewed(): return
         response = self.client.chat.completions.create(
             model = self.model,
@@ -177,15 +168,15 @@ A. 실제 사용자 입장에서 금융결제원의 보안에 안전성을 느�
     
     def evaluate_interview(self):
         # 디버깅용 
-        self.real_history = """
-Q: 안녕하세요, 자기소개 해주세요.
-A: 안녕하세요, 이번에 금융결제원에 지원한 홍길동입니다.
+#         self.real_history = """
+# Q: 안녕하세요, 자기소개 해주세요.
+# A: 안녕하세요, 이번에 금융결제원에 지원한 홍길동입니다.
 
-Q. 어떤 기술이나 지식을 통해 금융결제원에서 제공하는 서비스를 개선하고자 하는 것으로 귀결되었나요? 어떤 기술적 도전에 직면하여 어떻게 극복했나요?
-A: 제가 공부한 Java programming을 통해 금융결제원에서 제공하는 UI 서비스를 개선하고자 합니다.
+# Q. 어떤 기술이나 지식을 통해 금융결제원에서 제공하는 서비스를 개선하고자 하는 것으로 귀결되었나요? 어떤 기술적 도전에 직면하여 어떻게 극복했나요?
+# A: 제가 공부한 Java programming을 통해 금융결제원에서 제공하는 UI 서비스를 개선하고자 합니다.
 
-Q. 금융결제원의 서비스를 통해 안전성과 편리함을 느낀 부분에 대해 좀 더 구체적으로 설명해 주실 수 있을까요? 실제 사용자 입장에서 어떤 점이 특히 강조되는가요?
-A. 실제 사용자 입장에서 금융결제원의 보안에 안전성을 느낀 적 있습니다. 또한 UI가 체계적이라 편리함을 느꼈습니다."""
+# Q. 금융결제원의 서비스를 통해 안전성과 편리함을 느낀 부분에 대해 좀 더 구체적으로 설명해 주실 수 있을까요? 실제 사용자 입장에서 어떤 점이 특히 강조되는가요?
+# A. 실제 사용자 입장에서 금융결제원의 보안에 안전성을 느낀 적 있습니다. 또한 UI가 체계적이라 편리함을 느꼈습니다."""
         if not self.is_interviewed(): return
         response = self.client.chat.completions.create(
             model = self.model,
