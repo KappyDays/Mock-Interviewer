@@ -26,7 +26,7 @@ class Gui_app:
         
         self.text_box = tk.Text(self.root, height=35, width=85, bg="lightyellow")
         self.text_box.pack()
-        self.text_box.insert("1.0", "면접 내용은 여기에 기록됩니다.\n")
+        self.text_box.insert("1.10", "[면접 내용은 여기에 기록됩니다]\n")
         # self.text_box.config(state="disabled")
         
         self.intro_box = tk.Text(self.root, height=12, width=40, bg="#FFB6C1")
@@ -39,7 +39,7 @@ class Gui_app:
         self.intro_box.tag_add("left", "2.0", "5.0")
         self.intro_box.insert(tk.END, "1. 자기소개서 추가\n2. 면접 시작\n3. 면접 종료 후 요약 및 평가 확인\n\n")
         
-        self.intro_box.insert(tk.END, "[맞춤형 면접관 생성 방법]\n")
+        self.intro_box.insert(tk.END, "[맞춤형 면접관 생성 및 사용 방법]\n")
         self.intro_box.tag_configure("center", justify='center')
         self.intro_box.tag_add("center", "6.0", "7.0")
         
@@ -65,7 +65,7 @@ class Gui_app:
 
         
         self.button_start = tk.Button(self.root, text="면접 시작", 
-                                      command = self.ut.start_interview, bg="#FFB6C1")
+                                      command = self.ut.start_interview, bg="#FFB6C1", width=8, height=3)
         self.button_start.pack(pady=10)  # 상하 여백 추가
 
         self.button_s = tk.Button(self.root, text="자소서 추가", 

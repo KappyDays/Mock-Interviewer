@@ -15,14 +15,18 @@ class Gui_utils:
     def __init__(self, root, text_box, var1, var2, chatbot:Chatbot, db:ConnectDB):
         self.root = root
         self.question_queue = queue.Queue()
+        
         self.text_box = text_box
+        self.text_box.tag_configure("red", foreground="red")
+        self.text_box.tag_configure("blue", foreground="blue")
+        self.text_box.tag_configure("green", foreground="green")
         
         self.record_order = 0
-        self.ai_answer_order = 0
+        # self.ai_answer_order = 0
         
         self.ai_reply = "" #디버깅, None
         self.question_list = []
-        self.question_count = 0
+        # self.question_count = 0
         self.all_qc = 1
         
         self.cb = chatbot
@@ -45,24 +49,24 @@ class Gui_utils:
         # 지정된 시간(delay) 후에 팝업 창 닫기
         return popup
 
-    def add_hello(self, text_widget, alignment):
-        # 새로운 텍스트를 끝에 추가
-        current_end = text_widget.index("end-1c")
-        text_widget.insert(tk.END, "Hello World!\n")
-        new_end = text_widget.index("end-1c")
+    # def add_hello(self, text_widget, alignment):
+    #     # 새로운 텍스트를 끝에 추가
+    #     current_end = text_widget.index("end-1c")
+    #     text_widget.insert(tk.END, "Hello World!\n")
+    #     new_end = text_widget.index("end-1c")
         
-        # 텍스트를 지정된 정렬 방식으로 설정
-        tag_name = alignment + current_end  # 각 태그에 고유 이름을 부여
-        text_widget.tag_add(tag_name, current_end, new_end)
-        text_widget.tag_configure(tag_name, justify=alignment)
+    #     # 텍스트를 지정된 정렬 방식으로 설정
+    #     tag_name = alignment + current_end  # 각 태그에 고유 이름을 부여
+    #     text_widget.tag_add(tag_name, current_end, new_end)
+    #     text_widget.tag_configure(tag_name, justify=alignment)
         
     def add_PersonalStatement(self):
         def submit(input_box):
             user_input = input_box.get("1.0", "end-1c")
             if user_input:
-                self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
-                # popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
-                # popup.after(2000, popup.destroy)
+                # self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
+                popup = self.show_temporary_alert(self.root, "자기소개서 처리 중...", delay=2000)
+                popup.after(4000, popup.destroy)
                 
                 # 자소서 항목당 질문 2개씩 생성
                 self.question_list = self.cb.generate_ps_questions(user_input)
@@ -102,7 +106,10 @@ class Gui_utils:
         
         # for first question
         print("start_interview questions, ai_answer: ", self.ai_reply, "\n")
-        ai_speech_path = self.cb.make_tts(self.ai_reply) # 디버깅 위해 임시 주석
+        if self.all_qc == 1: # 첫 질문은 고정이라 파일 지정
+            ai_speech_path = "save_wav/reuse_wav/intro.mp3"
+        else:
+            ai_speech_path = self.cb.make_tts(self.ai_reply) # 디버깅 위해 임시 주석
         # ai_speech_path = "AiSpeech_0.mp3" #디버깅용
         self.ask_question(self.ai_reply, ai_speech_path)
         # self.root.after(1000, lambda: self.response_question(filename=self.record_filename))
@@ -113,6 +120,7 @@ class Gui_utils:
     def ask_question(self, query, ai_speech_path):
         self.text_box.insert(tk.END, f"Q: {query}" + "\n")
         self.right_align()
+        self.text_box.tag_add("red", f'{self.all_qc}.0', f'{self.all_qc}.end')
         
         self.play_tts(ai_speech_path)
 
@@ -141,7 +149,6 @@ class Gui_utils:
         
         # 녹음 시작 효과음
         pygame.mixer.music.load('beep.wav')
-        pygame.mixer.music.set_volume(0.2)  # 볼륨을 50%로 설정
         pygame.mixer.music.play()     
         while pygame.mixer.music.get_busy():
             continue  # MP3 재생이 끝날 때까지 기다림

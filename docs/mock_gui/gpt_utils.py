@@ -112,7 +112,7 @@ class Chatbot:
         self.real_history_update("A", user_input)
         # 인터뷰 도중 유저의 입력이 없을 경우
         if user_input == "":
-            ai_answer = "질문에 답변을 해주세요"
+            ai_answer = "질문에 답변을 해주세요."
             return ai_answer
         
         # 꼬리 질문일 경우 사용자 답변을 기반으로 질문을 생성
@@ -183,14 +183,15 @@ class Chatbot:
             messages=[
                 {"role": "system", "content": "You are a helpful Mock Interviewer.\n\
                     Look at the following whole conversation and give me an evaluation.\n\
-                    Give a maximum of 5 score according to each evaluation criteria and explain why in korean.\n\
+                    Give a maximum of 5 score according to each evaluation criteria and explain why.\n\
                     Here are five evaluation criteria.\n\n\
                     1. Is the answer based on the cover letter? ([your_score]/5)\n\
                     2. Is the clarity and logic of the answers to the given questions appropriate? ([your_score]/5)\n\
                     3. Is the interviewer's ability to understand the point of the question appropriate? ([your_score]/5)\n\
                     4. Is your major knowledge (technical) utilization ability, related work experience, and skill level sufficient? ([your_score]/5)\n\
                     5. Is creativity, willpower and developability (self-improvement needs), vision, and future plans well described? ([your_score]/5)\n\n\
-                    After evaluation, generate the overall evaluation and calculate the average score"},
+                    After evaluation, generate the overall evaluation and calculate the average score.\n\
+                    You must generate a response in Korean."},
                 {"role": "user", "content": self.real_history},
             ],
             max_tokens=self.max_tokens,

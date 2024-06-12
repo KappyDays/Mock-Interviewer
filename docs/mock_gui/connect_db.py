@@ -3,18 +3,18 @@ import sqlite3
 class ConnectDB:
     def __init__(self):
         print("DB연결 완료")
-        self.conn = sqlite3.connect('mock_interview2.db')
-        self.cursor = self.conn.cursor()
+        # self.conn = sqlite3.connect('mock_interview2.db')
+        # self.cursor = self.conn.cursor()
         
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS interview_data (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                question TEXT NOT NULL,
-                answer TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        self.conn.commit()
+        # self.cursor.execute('''
+        #     CREATE TABLE IF NOT EXISTS interview_data (
+        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         question TEXT NOT NULL,
+        #         answer TEXT NOT NULL,
+        #         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        #     )
+        # ''')
+        # self.conn.commit()
 
     # 데이터 삽입 함수
     def insert_interview_data(self, question, answer):
