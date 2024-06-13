@@ -280,7 +280,7 @@ class Gui_utils:
                             command=self.make_customized_mock_interviewer)
         button1.pack(padx=10, pady=15)
         button2 = tk.Button(dialog, text="맞춤형 면접관 사용", width=15, height=3, bg="#FFDAB9",
-                            command=print("하이"))
+                            command=self.use_customized_mock_interviewer)
         button2.pack(padx=10, pady=15)
         button3 = tk.Button(dialog, text="취소", width=6, height=2, bg="#DDA0DD",
                             command=dialog.destroy)
