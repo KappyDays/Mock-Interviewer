@@ -306,7 +306,10 @@ class Gui_utils:
         
     def show_summary(self):
         summary = self.cb.generate_summary()
-            
+        if summary == None:
+            return
+        
+        print("Dddd")
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Summary")
@@ -328,7 +331,10 @@ class Gui_utils:
         
     def show_evaluation(self): 
         evaluation = self.cb.evaluate_interview()
-            
+        
+        if evaluation == None:
+            return            
+        
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Evaluation")

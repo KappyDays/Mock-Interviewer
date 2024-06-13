@@ -39,19 +39,19 @@ class Gui_app:
         self.intro_box.tag_add("left", "2.0", "5.0")
         self.intro_box.insert(tk.END, "1. 자기소개서 추가\n2. 면접 시작\n3. 면접 종료 후 요약 및 평가 확인\n\n")
         
-        self.intro_box.insert(tk.END, "[맞춤형 면접관 생성 및 사용 방법]\n")
+        self.intro_box.insert(tk.END, "[개인 맞춤형 면접관 생성 및 사용 방법]\n")
         self.intro_box.tag_configure("center", justify='center')
         self.intro_box.tag_add("center", "6.0", "7.0")
         
         self.intro_box.tag_configure("left", justify='center')
         self.intro_box.tag_add("left", "7.0", "end")
-        self.intro_box.insert(tk.END, "1. 면접 내용 수집 동의 후 면접 진행\n2. 맞춤형 면접관 생성 클릭\n3. 맞충형 면접관 사용 체크\n")
+        self.intro_box.insert(tk.END, "1. 면접 내용 수집 동의 후 면접 진행\n2. 맞춤형 면접관 생성 클릭\n3. 맞춤형 면접관 사용 체크\n")
         self.intro_box.config(state="disabled")
             
         
         # 체크박스 생성
         self.var1 = tk.IntVar()
-        self.checkbox1 = tk.Checkbutton(root, text="면접 내용 수집에 동의(맞춤형 면접 제공)", variable=self.var1, bg="#FFDAB9")
+        self.checkbox1 = tk.Checkbutton(root, text="면접 내용 수집 동의", variable=self.var1, bg="#FFDAB9")
         self.checkbox1.place(x=455, y=519)
         # 체크박스 체크햇는지 확인은 .get() 으로 확인, 0(체크해제) 1(체크)
         
