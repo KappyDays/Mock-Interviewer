@@ -122,12 +122,12 @@ class Gui_utils:
         else:
             print("No file loaded")
         if record:
-            self.root.after(3000, self.record_question)
+            self.root.after(2500, self.record_question)
 
     def record_question(self):
         # 녹음 설정 값
         silence_threshold = 1.0  # 침묵 임계값 설정
-        max_silence_blocks = 80  # 연속 침묵을 허용하는 블록 수
+        max_silence_blocks = 65  # 연속 침묵을 허용하는 블록 수
         silence_counter = 0  # 침묵 블록 카운터 초기화
         q = queue.Queue()  # 오디오 데이터를 저장할 큐
         
