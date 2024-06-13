@@ -34,7 +34,6 @@ class Gui_utils:
         self.requestion = False
         
         self.var1 = var1
-        # self.var2 = var2
         
     def show_temporary_alert(self, window, message, geo="200x100", delay=2000):
         # 메시지를 보여주는 팝업 창 생성
@@ -123,12 +122,12 @@ class Gui_utils:
         else:
             print("No file loaded")
         if record:
-            self.root.after(2000, self.record_question)
+            self.root.after(3000, self.record_question)
 
     def record_question(self):
         # 녹음 설정 값
         silence_threshold = 1.0  # 침묵 임계값 설정
-        max_silence_blocks = 50  # 연속 침묵을 허용하는 블록 수
+        max_silence_blocks = 80  # 연속 침묵을 허용하는 블록 수
         silence_counter = 0  # 침묵 블록 카운터 초기화
         q = queue.Queue()  # 오디오 데이터를 저장할 큐
         
@@ -187,6 +186,13 @@ class Gui_utils:
         self.proceed_conversation(user_text)
 
     def proceed_conversation(self, user_text):
+        # 유저 응답 real_history에 추가
+        if user_text == "":
+            self.cb.real_history_update("A", "응답안함")
+        else:
+            self.cb.real_history_update("A", user_text)
+        
+                
         # 자소서 기반 질문이 끝나고, reply까지 완료하면 면접 종료
         if self.question_list == [] and self.all_qc % 2 == 1:
             ai_text = "네, 알겠습니다. 수고하셨습니다. 면접이 종료되었습니다. 면접 내용을 확인해주세요."
@@ -203,14 +209,18 @@ class Gui_utils:
                 self.save_chat_history()
             return
         
+
         # 답변을 통해 query, tts 생성하고 인자 넘겨주기
         if self.all_qc % 2 == 0: # 꼬리 질문을 생성해서 사용
+            print("꼬리 질문 사용!")
             ai_text = self.cb.generate_response(user_text)
         else: # 미리 생성된 자소서 기반 질문 사용
+            print("자소서기반 질문 사용!")
             ai_text = self.cb.generate_response(user_text, self.question_list.pop())
             if self.all_qc == 1: #첫 번째 질문이면 인사 추가
                 ai_text  = "네, 반갑습니다." + ai_text
-        self.all_qc += 1
+        if ai_text != "질문에 답변을 해주세요.": # 해당 응답이 아닐 때만 질문 개수가 올라감
+            self.all_qc += 1
         
         ai_speech_path = self.cb.make_tts(ai_text)
         # ai_speech_path = "C:/workspace/docs/mock_gui/AiSpeech_0.mp3"
@@ -219,15 +229,15 @@ class Gui_utils:
         return ai_speech_path
 
     def save_chat_history(self):
-        self.cb.real_history = "Q: 안녕하세요, 자기소개를 해주세요.\nA: 안녕하세요, 저는 김지원입니다. 대학교에서 컴퓨터공학을 전공하였고, 현재는 인공지능 개발자로 일하고 있습니다.\n\nQ: 무슨 인공지능을 개발하고 있나요?\nA: 저는 강력 인공지능을 개발하고 있습니다.\n\n"
-        print(f"리얼히스토리 확인 =====\n{self.cb.real_history}")
+        # self.cb.real_history = "Q: 안녕하세요, 자기소개를 해주세요.\nA: 안녕하세요, 저는 김지원입니다. 대학교에서 컴퓨터공학을 전공하였고, 현재는 인공지능 개발자로 일하고 있습니다.\n\nQ: 무슨 인공지능을 개발하고 있나요?\nA: 저는 강력 인공지능을 개발하고 있습니다.\n\n"
+        print(f"save_chat_history(real_history 확인) =====\n{self.cb.real_history}")
         if self.cb.real_history == "":
             self.text_box.insert(tk.END, "면접 내용이 없습니다.\n")
             return
 
         temp_history = self.cb.real_history.strip().split('\n')
         temp_history = [temp for temp in temp_history if temp != '']
-        print(temp_history)
+        # print(temp_history)
         Q_list = []
         A_list = []
         for temp in temp_history:
@@ -238,8 +248,8 @@ class Gui_utils:
             else:
                 print("append error")
         
-        print(Q_list)        
-        print(A_list)
+        # print(Q_list)        
+        # print(A_list)
         assert len(Q_list) == len(A_list)
         
         for i in range(len(Q_list)):
@@ -294,7 +304,7 @@ class Gui_utils:
             popup.after(4000, popup.destroy)
             self.cb.model = self.ft.get_fine_tuned_model()
         else:
-            popup = self.show_temporary_alert(self.root, "맞춤형 면접관을 먼저 생성해 주세요.", delay=2000)
+            popup = self.show_temporary_alert(self.root, "맞춤형 면접관을 먼저 생성해 주세요.", geo="500x100", delay=2000)
             popup.after(4000, popup.destroy)
         
     def make_customized_mock_interviewer(self):
@@ -310,7 +320,7 @@ class Gui_utils:
             # DB에서 데이터를 가져와 JSONL 파일 생성
             if self.ft.make_fine_tuning_data() == "insufficient":
                 # 데이터가 불충분하면 스탑
-                log_box.insert(tk.END, "데이터가 부족합니다. 최소 10개 이상의 데이터가 필요합니다.\n메인 화면으로 돌아가 면접을 진행해 주세요.\n\n")
+                log_box.insert(tk.END, "데이터가 부족합니다. 최소 10개 이상의 데이터가 필요합니다.\n\n메인 화면으로 돌아가 ""면접 내용 수집 동의""를 체크하고 면접을 진행해 주세요.\n\n")
                 return
             
             # Fine-Tuning을 위해 파일 업로드
@@ -336,7 +346,6 @@ class Gui_utils:
         if summary == None:
             return
         
-        print("Dddd")
         # 새 대화창 생성
         dialog = Toplevel(self.root)
         dialog.title("Summary")

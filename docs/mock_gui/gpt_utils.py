@@ -110,7 +110,7 @@ class Chatbot:
     # 응답 생성
     def generate_response(self, user_input, question=False): #follow question
         self.history_update("user", user_input)
-        self.real_history_update("A", user_input)
+        # self.real_history_update("A", user_input)
         # 인터뷰 도중 유저의 입력이 없을 경우
         if user_input == "":
             ai_answer = "질문에 답변을 해주세요."
@@ -164,7 +164,7 @@ class Chatbot:
             temperature=self.temperature
         )
         summary = response.choices[0].message.content
-        print("서머리리: ", summary)
+        print("[Interview Summary]:\n", summary)
         return summary
     
     def evaluate_interview(self):

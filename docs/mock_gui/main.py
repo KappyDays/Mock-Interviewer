@@ -47,7 +47,7 @@ class Gui_app:
         
         self.intro_box.tag_configure("left", justify='center')
         self.intro_box.tag_add("left", "7.0", "end")
-        self.intro_box.insert(tk.END, "1. 면접 내용 수집 동의 후 면접 진행\n2. 맞춤형 면접관 생성 클릭\n3. 맞춤형 면접관 사용 체크\n")
+        self.intro_box.insert(tk.END, "1. 면접 내용 수집 동의 후 면접 진행\n2. 맞춤형 면접관 버튼 클릭\n3. 맞춤형 면접관 생성 및 사용\n")
         self.intro_box.config(state="disabled")
 
         # 버튼을 배치할 프레임 생성
@@ -63,7 +63,9 @@ class Gui_app:
         
         # 디버깅용 프레임
         self.button_frame2 = tk.Frame(self.root, bg='gray')
-        self.button_frame2.pack(side=tk.BOTTOM, fill=tk.BOTH, padx=10, pady=10)    
+        # self.button_frame2.pack(side=tk.BOTTOM, fill=tk.BOTH, padx=10, pady=10)    
+        self.debug_frame = tk.Frame(self.root, bg='gray')
+        self.debug_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, padx=10, pady=10)
         
         # 체크박스 생성
         self.var1 = tk.IntVar()
@@ -117,11 +119,11 @@ class Gui_app:
                                    command=lambda: print("question_list:",self.ut.question_list))
         self.button_t2.pack(pady=2)
         
-        self.testb = tk.Button(self.button_frame2, text="DB에 데이터 넣기 버튼", 
+        self.testb = tk.Button(self.debug_frame, text="[디버깅] 데이터 넣기", 
                                command=self.ut.save_chat_history)
         self.testb.pack(pady=2)
         
-        self.testb2 = tk.Button(self.button_frame2, text="DB에서 데이터 읽기 버튼", 
+        self.testb2 = tk.Button(self.debug_frame, text="[디버깅] 데이터 읽기", 
                                 command=self.db.select_interview_data)
         self.testb2.pack(pady=2)
         
