@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import Toplevel, Label, Entry, Button, Text, messagebox, filedialog
 from gpt_utils import *
 from connect_db import *
+from fine_tuning import *
 import pdb
 import pygame
 import time
@@ -12,17 +13,15 @@ import numpy as np
 import queue
 
 class Gui_utils:
-    def __init__(self, root, text_box, var1, var2, chatbot:Chatbot, db:ConnectDB):
+    def __init__(self, root, text_box, var1, chatbot:Chatbot, db:ConnectDB, ft:FineTuning):
         self.root = root
         self.question_queue = queue.Queue()
         
         self.text_box = text_box
-        self.text_box.tag_configure("red", foreground="red")
-        self.text_box.tag_configure("blue", foreground="blue")
-        self.text_box.tag_configure("green", foreground="green")
         
         self.record_order = 0
         # self.ai_answer_order = 0
+        self.fine_tuned_model_id = None
         
         self.ai_reply = "" #디버깅, None
         self.question_list = []
@@ -31,34 +30,25 @@ class Gui_utils:
         
         self.cb = chatbot
         self.db = db
+        self.ft = ft
         self.requestion = False
         
         self.var1 = var1
-        self.var2 = var2
+        # self.var2 = var2
         
-    def show_temporary_alert(self, window, message, delay=2000):
+    def show_temporary_alert(self, window, message, geo="200x100", delay=2000):
         # 메시지를 보여주는 팝업 창 생성
         popup = tk.Toplevel(window)
         popup.title("Alert")
-        popup.geometry("200x100")  # 창 크기 설정
+        popup.geometry(geo)  # 창 크기 설정
+        popup.configure(bg='lightblue')
 
         # 메시지 라벨 추가
-        message_label = tk.Label(popup, text=message)
+        message_label = tk.Label(popup, text=message, bg="lightblue")
         message_label.pack(pady=20, padx=20)
 
         # 지정된 시간(delay) 후에 팝업 창 닫기
         return popup
-
-    # def add_hello(self, text_widget, alignment):
-    #     # 새로운 텍스트를 끝에 추가
-    #     current_end = text_widget.index("end-1c")
-    #     text_widget.insert(tk.END, "Hello World!\n")
-    #     new_end = text_widget.index("end-1c")
-        
-    #     # 텍스트를 지정된 정렬 방식으로 설정
-    #     tag_name = alignment + current_end  # 각 태그에 고유 이름을 부여
-    #     text_widget.tag_add(tag_name, current_end, new_end)
-    #     text_widget.tag_configure(tag_name, justify=alignment)
         
     def add_PersonalStatement(self):
         def submit(input_box):
@@ -89,7 +79,7 @@ class Gui_utils:
         label.pack(pady=10)
 
         # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=40, width=70, bg="lightyellow")
+        input_box = Text(dialog, height=30, width=60, bg="lightyellow")
         # entry = Entry(dialog, width=25)
         # entry.pack(pady=5)
         input_box.pack(pady=5)
@@ -120,7 +110,6 @@ class Gui_utils:
     def ask_question(self, query, ai_speech_path):
         self.text_box.insert(tk.END, f"Q: {query}" + "\n")
         self.right_align()
-        self.text_box.tag_add("red", f'{self.all_qc}.0', f'{self.all_qc}.end')
         
         self.play_tts(ai_speech_path)
 
@@ -281,28 +270,66 @@ class Gui_utils:
         # 확인 버튼 생성
         submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
         submit_button.pack(pady=10)
-        
-    def make_customized_mock_interviewer(self): 
-        # evaluation = self.cb.evaluate_interview()
-            
+    
+    def select_fine_tuning(self):
         # 새 대화창 생성
-        dialog = Toplevel(self.root)
-        dialog.title("Customizing")
-        dialog.geometry("600x700")  # 대화창 크기 설정
-        dialog.configure(bg='lightblue')
-
-        # 라벨 생성
-        label = Label(dialog, text="모의 면접관 제작", bg="lightblue", fg="black", font=("Helvetica", 16, "bold"))
-        label.pack(pady=10)
-        # 텍스트 입력 필드 생성
-        input_box = Text(dialog, height=35, width=70, bg="lightyellow")
-        input_box.pack(pady=5)
-        # input_box.insert("1.0", evaluation)
-        input_box.config(state=tk.DISABLED)
-
-        # 확인 버튼 생성
-        submit_button = Button(dialog, text="확인", command=lambda: dialog.destroy(), bg="#FFB6C1")
-        submit_button.pack(pady=10)
+        dialog = Toplevel(self.root, bg="lightblue")
+        dialog.title("맞춤형 면접관 사용")
+        dialog.geometry("300x300")
+        button1 = tk.Button(dialog, text="맞춤형 면접관 생성", width=15, height=3, bg="#FFB6C1",
+                            command=self.make_customized_mock_interviewer)
+        button1.pack(padx=10, pady=15)
+        button2 = tk.Button(dialog, text="맞춤형 면접관 사용", width=15, height=3, bg="#FFDAB9",
+                            command=print("하이"))
+        button2.pack(padx=10, pady=15)
+        button3 = tk.Button(dialog, text="취소", width=6, height=2, bg="#DDA0DD",
+                            command=dialog.destroy)
+        button3.pack(padx=10, pady=15)
+    
+    def use_customized_mock_interviewer(self):
+        # 파인 튜닝 모델이 존재하면 사용
+        self.fine_tuned_model_id = self.ft.get_fine_tuned_model()
+        if self.fine_tuned_model_id != None:
+            popup = self.show_temporary_alert(self.root, "맞춤형 면접관 설정 중...", delay=2000)
+            popup.after(4000, popup.destroy)
+            self.cb.model = self.ft.get_fine_tuned_model()
+        else:
+            popup = self.show_temporary_alert(self.root, "맞춤형 면접관을 먼저 생성해 주세요.", delay=2000)
+            popup.after(4000, popup.destroy)
+        
+    def make_customized_mock_interviewer(self):
+        dialog = Toplevel(self.root, bg="lightblue")
+        dialog.title("맞춤형 면접관 생성")
+        dialog.geometry("400x400")
+        log_box = tk.Text(dialog, height=15, width=50, bg="lightyellow")
+        log_box.pack(pady=10)
+        log_box.insert(tk.END, "맞춤형 면접관 생성 중...\n\n")
+        cancelButton = tk.Button(dialog, text="취소", width=6, height=2, bg="#DDA0DD", command=dialog.destroy).pack(padx=10, pady=15)
+        
+        def process():
+            # DB에서 데이터를 가져와 JSONL 파일 생성
+            if self.ft.make_fine_tuning_data() == "insufficient":
+                # 데이터가 불충분하면 스탑
+                log_box.insert(tk.END, "데이터가 부족합니다. 최소 10개 이상의 데이터가 필요합니다.\n메인 화면으로 돌아가 면접을 진행해 주세요.\n\n")
+                return
+            
+            # Fine-Tuning을 위해 파일 업로드
+            file_id = self.ft.upload_file(self.ft.dataset_path)
+            log_box.insert(tk.END, f"Uploaded file with ID: {file_id}\n\n")
+            
+            # 파인튜닝 작업 생성 및 진행
+            fine_tune_id = self.ft.create_fine_tune(file_id)
+            log_box.insert(tk.END, f"Started fine-tuning with ID: {fine_tune_id}\n\n")
+            
+            # 파인튜닝 상태 확인
+            fine_tune_result = self.ft.check_fine_tune_status(fine_tune_id)
+            log_box.insert(tk.END, f"Fine-tuning completed with status: {fine_tune_result.status}\n\n")
+            log_box.insert(tk.END, f"Fine-tuned model ID: {fine_tune_result.fine_tuned_model}\n")
+            # self.fine_tuned_model_id = fine_tune_result.fine_tuned_model
+            
+        thread = threading.Thread(target=process)
+        thread.start()
+    
         
     def show_summary(self):
         summary = self.cb.generate_summary()

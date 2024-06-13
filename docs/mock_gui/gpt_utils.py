@@ -18,6 +18,7 @@ class Chatbot:
         self.client = OpenAI(
             api_key=os.getenv('API_KEY')
         )
+        # self.client.fine_tuning.jobs.r
         
         ## GUI 관련
         self.root = root
@@ -224,7 +225,7 @@ class Chatbot:
     
     def is_interviewed(self):
         if self.real_history == "":
-            self.text_box.insert(tk.END, "대화 내용이 없습니다. 먼저 Mock Interview를 진행해주세요.\n")
+            self.text_box.insert(tk.END, "면접 내용이 없습니다. 먼저 모의 면접을 진행해주세요.\n")
             return False
         else:
             print("인터뷰 내용 있음!!")
