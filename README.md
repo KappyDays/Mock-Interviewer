@@ -1,4 +1,4 @@
-# C&S Project 2024 - Team xxx
+# C&S Project 2024 - Team G
 
 This repository is a collection of prerequisites and guidance for team project activities.
 
@@ -10,11 +10,17 @@ The directory structure below must be followed, and must be periodically updated
 
 ```
 /
-    /docs/
+    /docs/ # Project ppts
+    /.gitignore
     /Dockerfile  # or, /Containerfile
     /README.md
     /Usage.md
-    /...  # your own source codes
+
+    /mock_gui/ # Project Folder
+        /dataset # Data for Fine Tuning and Demo
+        /save_wav # Frequently used music sources
+        /user_data # Created after using a mock interviewer
+        /.env # Must be created to use the GPT API (contents: APT_KEY="YOUR API KEY")
 ```
 
 ## Guidelines
