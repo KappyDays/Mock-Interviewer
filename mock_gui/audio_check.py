@@ -4,6 +4,8 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
+print(sd.query_devices())
+
 pygame.mixer.init()
 
 def record_question():
