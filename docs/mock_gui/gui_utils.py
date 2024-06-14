@@ -126,8 +126,8 @@ class Gui_utils:
 
     def record_question(self):
         # 녹음 설정 값
-        silence_threshold = 1.0  # 침묵 임계값 설정
-        max_silence_blocks = 65  # 연속 침묵을 허용하는 블록 수
+        silence_threshold = 3.0  # 침묵 임계값 설정
+        max_silence_blocks = 80  # 연속 침묵을 허용하는 블록 수
         silence_counter = 0  # 침묵 블록 카운터 초기화
         q = queue.Queue()  # 오디오 데이터를 저장할 큐
         
@@ -144,8 +144,9 @@ class Gui_utils:
         # 녹음 함수들
         def audio_callback(indata, frames, time, status):
             """이 콜백은 새로운 오디오 데이터가 도착할 때마다 호출됩니다."""
+            nonlocal silence_counter
             volume_norm = np.linalg.norm(indata) * 10
-            # print(f"Volume: {volume_norm:.2f}")  # 볼륨 수준 출력 (디버깅 목적)
+            print(f"Volume: {volume_norm:.2f}")  # 볼륨 수준 출력 (디버깅 목적)
             if volume_norm < silence_threshold:
                 nonlocal silence_counter
                 silence_counter += 1
@@ -154,10 +155,19 @@ class Gui_utils:
             if silence_counter >= max_silence_blocks:
                 raise sd.CallbackStop  # 침묵이 지속되면 콜백 중지
             q.put(indata.copy())  # 큐에 오디오 데이터 추가
+
         def recording_thread():
+            print("레코드시작")
             try:
-                with sd.InputStream(callback=audio_callback) as stream:
-                    with sf.SoundFile(UserSpeech_filename, mode='w', samplerate=44100, channels=2, subtype="PCM_16") as file:
+                # 기본 오디오 장치 정보 출력
+                print("Default input device:", sd.query_devices(kind='input'))
+
+                # 오디오 장치의 기본 샘플링 레이트 가져오기
+                device_info = sd.query_devices(sd.default.device, 'input')
+                samplerate = int(device_info['default_samplerate'])
+                               
+                with sd.InputStream(callback=audio_callback, samplerate=samplerate, channels=2, device=0) as stream:
+                    with sf.SoundFile(UserSpeech_filename, mode='w', samplerate=samplerate, channels=2, subtype="PCM_16") as file:
                         while True:
                             try:
                                 data = q.get(timeout=1)  # 1초 타임아웃 설정
